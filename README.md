@@ -1,80 +1,78 @@
-# OG Image Studio
+# OG Image Studio (Edge)
 
-A tiny Next.js (App Router) service that generates **Open Graph images on-the-fly** at the edge using [`@vercel/og`](https://vercel.com/docs/functions/og-image-generation/og-image-generation). Perfect for dynamic social cards: blog posts, product pages, and dashboards.
+Tiny, production-minded **Open Graph (1200×630) image generator** built with Next.js App Router + `@vercel/og`, running on the **Edge runtime**. Great for dynamic social cards for posts, products, dashboards—anything that needs a branded preview image on the fly.
 
-> **Production URL:** `https://<your-project>.vercel.app`
->
-> Replace with your actual Vercel domain.
+**Live API:**  
+`https://og-image-studio-3k7si2rxt-john-rollins-projects.vercel.app/api/og`
+
+> If you later create a Vercel alias (recommended), update this URL once to something stable like `https://og-image-studio.vercel.app/api/og`.
 
 ---
 
 ## Features
 
-* **Edge runtime** for fast, low-latency rendering
-* Simple **REST endpoint**: `GET /api/og` → returns a PNG (1200×630)
-* **No env vars required**
-* **Cache control** set to `no-store` to avoid CDN caching while developing
-* Works with query params for title, subtitle, theme, etc. (easy to extend)
+- ⚡ **Edge runtime** for low-latency, cold-start-friendly rendering  
+- 🖼️ **Simple REST endpoint**: `GET /api/og` → returns `image/png` (1200×630)  
+- 🧪 **Cache-busting friendly**: `cache-control: no-store` while developing  
+- 🧩 Easy to extend with query params (title, subtitle, theme, colors, etc.)  
+- 🛠️ No external services or env vars required
+
+---
 
 ## Tech Stack
 
-* **Next.js 14** (App Router)
-* **TypeScript**
-* **@vercel/og** for server-side image generation
-* **Vercel** for deployment
+- **Next.js 14** (App Router)
+- **TypeScript**
+- **`@vercel/og`** for server-side image generation
+- **Vercel** for deployment
 
 ---
 
-## API
+## Quick Try
 
-### Endpoint
+Open in your browser:
 
-```
+https://og-image-studio-3k7si2rxt-john-rollins-projects.vercel.app/api/og?t=NOW
+
+bash
+Copy code
+
+Save a PNG with `curl`:
+
+```bash
+BASE="https://og-image-studio-3k7si2rxt-john-rollins-projects.vercel.app"
+curl -o hello.png "$BASE/api/og?t=$(date +%s)"
+file hello.png   # => PNG image data, 1200 x 630
+Example with parameters (after you switch to the “richer” route below):
+
+bash
+Copy code
+curl -o card.png \
+  "$BASE/api/og?title=Hello&subtitle=Edge&badge=DEMO&theme=dark&t=$(date +%s)"
+API
+Endpoint
+bash
+Copy code
 GET /api/og
-```
+Response: image/png (1200×630)
 
-**Response**: `image/png` (1200×630)
+Query Parameters (suggested)
+Param	Type	Default	Notes
+title	string	Hello	Large headline text
+subtitle	string	(none)	Smaller supporting text
+badge	string	(none)	Small label shown at top-left
+theme	enum	light	light or dark
+bg	color	#ffffff/#0b0f17	Background hex; if omitted, uses theme
 
-### Query Parameters
+The default project currently returns a simple “Hello” PNG. Swap to the richer example below to support all params.
 
-| Param      | Type   | Default             | Notes                                  |
-| ---------- | ------ | ------------------- | -------------------------------------- |
-| `title`    | string | `Hello`             | Large headline text                    |
-| `subtitle` | string | *(none)*            | Smaller supporting text                |
-| `badge`    | string | *(none)*            | Small label shown top-left             |
-| `theme`    | enum   | `light`             | `light` or `dark`                      |
-| `bg`       | color  | `#ffffff / #0b0f17` | Background hex. If omitted, uses theme |
+How It Works
+The route is an Edge Function that returns an ImageResponse built from JSX.
 
-> The starter version in this repo returns a simple **“Hello”** image. Swap in the more featureful JSX (example below) to support additional params.
+Current minimal route: src/app/api/og/route.tsx
 
-### Quick Tests
-
-* **Open in browser**:
-
-  ```
-  https://<your-project>.vercel.app/api/og?title=Hello&subtitle=Edge&badge=DEMO&theme=dark
-  ```
-* **Save a PNG**:
-
-  ```bash
-  BASE="https://<your-project>.vercel.app"
-  curl -o hello.png "$BASE/api/og?title=Hello&subtitle=Edge&badge=DEMO&theme=dark&t=$(date +%s)"
-  ```
-* **Inspect the file** (macOS):
-
-  ```bash
-  file hello.png && open hello.png
-  ```
-
----
-
-## How it Works
-
-The API route uses the **Edge Runtime** and creates an `ImageResponse` from JSX.
-
-**Minimal route (current default):** `src/app/api/og/route.tsx`
-
-```tsx
+tsx
+Copy code
 import { ImageResponse } from '@vercel/og';
 
 export const runtime = 'edge';
@@ -110,11 +108,10 @@ export async function GET() {
     },
   });
 }
-```
+Richer version (supports query params):
 
-**Richer version (supports query params):**
-
-```tsx
+tsx
+Copy code
 import { ImageResponse } from '@vercel/og';
 export const runtime = 'edge';
 
@@ -186,91 +183,68 @@ export async function GET(req: Request) {
     },
   });
 }
-```
+Use It in Pages (Open Graph)
+Point og:image (and twitter:image) at your API:
 
----
-
-## Add to Your Pages (Open Graph)
-
-Use the API URL as your `og:image` (and `twitter:image`) in your page’s head.
-
-```html
-<meta property="og:image" content="https://<your-project>.vercel.app/api/og?title=My%20Post&subtitle=TIL" />
+html
+Copy code
+<meta property="og:image" content="https://og-image-studio-3k7si2rxt-john-rollins-projects.vercel.app/api/og?title=My%20Post&subtitle=TIL" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://<your-project>.vercel.app/api/og?title=My%20Post&subtitle=TIL" />
-```
+<meta name="twitter:image" content="https://og-image-studio-3k7si2rxt-john-rollins-projects.vercel.app/api/og?title=My%20Post&subtitle=TIL" />
+With Next.js App Router, you can also return this URL from generateMetadata.
 
-With Next.js App Router, you can also compute this in `generateMetadata` and return a URL string for `openGraph.images`.
-
----
-
-## Local Development
-
-```bash
-# 1) Install deps
+Local Development
+bash
+Copy code
 npm install
-
-# 2) Run dev server
 npm run dev
 # http://localhost:3000/api/og
 
-# 3) Test the endpoint
+# Test with cache-busting query
 curl -o hello.png "http://localhost:3000/api/og?t=$(date +%s)"
-```
+Deploy
+This repo is linked to Vercel. Every push to main triggers a production build.
 
-> If you paste commands from this README: lines starting with `#` are comments—skip them if you’re copying into your terminal.
-
----
-
-## Deploy
-
-### One-time setup
-
-* Create or link a project on **Vercel**.
-* Connect the GitHub repo `JohnR789/og-image-studio` to the Vercel project (Settings → Git → Connect).
-
-### Deploy flow
-
-```bash
-# any change on main will auto-deploy
+bash
+Copy code
 git add -A
 git commit -m "feat: update card style"
 git push
-```
+(Optional) Set a stable alias once so your README never needs updating:
 
-Then visit your Vercel dashboard to grab the **Production URL** and test `/api/og`.
-
----
-
-## Project Structure
-
-```
+bash
+Copy code
+vercel alias set og-image-studio-3k7si2rxt-john-rollins-projects.vercel.app og-image-studio.vercel.app
+Project Structure
+pgsql
+Copy code
 .
 ├── src/app/api/og/route.tsx   # Edge function that returns the PNG
 ├── package.json
 ├── tsconfig.json
 ├── next.config.mjs
 └── README.md
-```
+Troubleshooting
+Saved file is 0 bytes
+Append ?t=<timestamp> to bypass CDN/browser caches and ensure the route returns
+content-type: image/png and cache-control: no-store.
 
----
+401 Vercel “Authentication Required” page
+Your project likely has Deployment Protection enabled. Disable it (Project → Settings → Security) or use a bypass token for automation.
 
-## Troubleshooting
+TypeScript/JSX errors
+Make sure the file is .tsx (since it contains JSX) and @vercel/og is installed.
 
-* **401 / Vercel Authentication page**: Your project likely has **Deployment Protection** enabled. Disable it in Vercel → Project Settings → Security, or use a bypass token in automation.
-* **`content-length: 0` or empty files**: You may be hitting a cached domain/URL. Add a cache-busting query (e.g., `?t=TIMESTAMP`) and ensure the response sets `cache-control: no-store`.
-* **Type errors**: Ensure `@vercel/og` is installed and the file is **`.tsx`** (JSX requires it in this setup).
+Roadmap Ideas
+Custom fonts (Google Fonts or bundled TTF)
 
----
+Theme presets (brand palettes)
 
-## Roadmap Ideas
+Emojis/avatars, gradients, patterns
 
-* Custom fonts (Google Fonts or bundled TTF)
-* Theme presets (brand palettes)
-* Emoji/avatars, gradients, patterns
-* Presigned URLs / HMAC to prevent abuse
-* Rate limiting (KV, Redis)
+Presigned/HMAC’d URLs to prevent abuse
 
-## License
+Basic rate limiting & logging
 
+License
 MIT © 2025 John Rollins
