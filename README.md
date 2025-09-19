@@ -5,7 +5,6 @@ Tiny, production-minded **Open Graph (1200×630) image generator** built with Ne
 **Live API:**  
 `https://og-image-studio-3k7si2rxt-john-rollins-projects.vercel.app/api/og`
 
-> If you later create a Vercel alias (recommended), update this URL once to something stable like `https://og-image-studio.vercel.app/api/og`.
 
 ---
 
